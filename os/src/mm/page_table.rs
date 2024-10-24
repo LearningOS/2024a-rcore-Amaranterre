@@ -226,16 +226,11 @@ pub fn modify_refmut<T>(token: usize, ptr: *mut T,  value: T) {
             &value as *const T as *const u8,
             mem::size_of::<T>(),
         );
-
+        
         let mut idx = 0;
         for dst in dsts {
             ptr::copy_nonoverlapping(&src[idx] as *const u8, &mut dst[0] as *mut u8, dst.len());
             idx += dst.len();
         }
-        // ptr::copy_nonoverlapping(src.as_ptr(), dst.as_mut_ptr() as usize as *mut u8, src.len());
-
-
     }
-
-
 } 
