@@ -4,6 +4,7 @@ use alloc::string::String;
 use alloc::vec;
 use alloc::vec::Vec;
 use bitflags::*;
+use core::{mem, ptr};
 
 bitflags! {
     /// page table entry flags
@@ -203,13 +204,38 @@ pub fn translated_str(token: usize, ptr: *const u8) -> String {
     string
 }
 /// Translate a ptr[u8] array through page table and return a mutable reference of T
-pub fn translated_refmut<T>(token: usize, ptr: *mut T) -> &'static mut T {
-    //trace!("into translated_refmut!");
-    let page_table = PageTable::from_token(token);
-    let va = ptr as usize;
-    //trace!("translated_refmut: before translate_va");
-    page_table
-        .translate_va(VirtAddr::from(va))
-        .unwrap()
-        .get_mut()
-}
+// pub fn translated_refmut<T>(token: usize, ptr: *mut T) -> &'static mut T {
+
+//     src = translated_byte_buffer(token, ptr as *const T as *const u8, mem::size_of::<T>());
+    
+
+//     //trace!("into translated_refmut!");
+//     let page_table = PageTable::from_token(token);
+//     let va = ptr as usize;
+//     //trace!("translated_refmut: before translate_va");
+//     page_table
+//         .translate_va(VirtAddr::from(va))
+//         .unwrap()
+//         .get_mut()
+// }
+
+pub fn modify_refmut<T>(token: usize, ptr: *mut T,  value: T) {
+    unsafe{
+        let dsts = translated_byte_buffer(token, ptr as *const T as *const u8, mem::size_of::<T>());
+        let src = core::slice::from_raw_parts(
+            &value as *const T as *const u8,
+            mem::size_of::<T>(),
+        );
+
+        let mut idx = 0;
+        for dst in dsts {
+            ptr::copy_nonoverlapping(&src[idx] as *const u8, &mut dst[0] as *mut u8, dst.len());
+            idx += dst.len();
+        }
+        // ptr::copy_nonoverlapping(src.as_ptr(), dst.as_mut_ptr() as usize as *mut u8, src.len());
+
+
+    }
+
+
+} 
